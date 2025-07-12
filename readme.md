@@ -25,8 +25,11 @@
 начать работу локально
 python -m venv venv
 venv\Scripts\activate.bat
+source venv/bin/activate
 pip install uv
 uv pip install -e ./src/wh_control
+uv pip install -e ./src/wh_control[tests]
+uv pip install -e ./src/wh_control[lint]
 
 
 с докером

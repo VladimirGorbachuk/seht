@@ -17,7 +17,11 @@ class AuthUser(Base):
         types.UUID,
         primary_key=True,
     )
-    login: Mapped[str]
+    login: Mapped[str] = mapped_column(
+        types.String,
+        unique=True,
+    )
+    salt: Mapped[str]
     password_hash: Mapped[str]
 
 

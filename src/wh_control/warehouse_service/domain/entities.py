@@ -1,10 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
+import datetime
 
 
-@dataclass
-class WareHouse:
-    uuid: UUID
 
 
 @dataclass
@@ -39,4 +37,12 @@ class ItemQuantity:
     quantity: int
 
 
-class 
+
+@dataclass
+class WareHouse:
+    uuid: UUID
+    item_quantities: list[ItemQuantity]
+
+    def add_items(self, item_quantity: ItemQuantity):
+        self.item_quantities
+

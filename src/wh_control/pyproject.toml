@@ -15,6 +15,7 @@ dependencies = [
     "celery==5.5.3",
     "faststream==0.5.44",
     "aiohttp>=3.12.14",
+    "cryptography==45.0.5"
 ]
 
 [project.optional-dependencies]
