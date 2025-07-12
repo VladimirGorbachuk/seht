@@ -20,3 +20,14 @@
    - docker-compose
    - минималистичная бд (предметы, склады, пользователи)
    - минималистичный апи (CRUD по инвентарю складов, предметов)
+
+
+начать работу локально
+python -m venv venv
+venv\Scripts\activate.bat
+pip install uv
+uv pip install -e ./src/wh_control
+
+
+с докером
+docker-compose up --build

@@ -15,9 +15,9 @@ class PostgresSettings:
         return cls(
             user=os.environ.get("POSTGRES_USER", "postgres"),
             password=os.environ.get("POSTGRES_PASSWORD", "postgres"),
-            host=os.environ.get("POSTGRES_HOST", "postgres"),
+            host=os.environ.get("POSTGRES_HOST", "localhost"),
             port=int(os.environ.get("POSTGRES_PORT", 5432)),
-            db=os.environ.get("POSTGRES_DB", "default"),
+            db=os.environ.get("POSTGRES_DB", "db"),
         )
 
     @property

@@ -1,0 +1,46 @@
+services:
+  api:
+    build:
+      dockerfile:
+        ./ci_cd/api.Dockerfile
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: warehouses
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: db
+      POSTGRES_PORT: 5432
+    ports:
+      - 8080:8080
+    command: alembic revision --autogenerate -m "initial"
+
+  db:
+    image: postgres:17.5-bookworm
+    shm_size: 4gb
+    command: [
+      "postgres", 
+      "-c",
+      "log_destination=stderr", 
+      "-c", 
+      "log_min_duration_statement=0.1",
+    ]
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: warehouses
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: db
+      POSTGRES_PORT: 5432
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:4.1.2-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+
+volumes:
+  postgres:

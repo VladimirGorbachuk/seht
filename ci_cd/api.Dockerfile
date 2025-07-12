@@ -16,4 +16,4 @@ COPY --from=builder /venv /venv
 WORKDIR /app
 COPY ./src .
 RUN pip install ./wh_control
-CMD python -m aiohttp.web -H localhost -P 8080 wired_up.api.main:init
+CMD uvicorn
