@@ -1,7 +1,7 @@
 from sqlalchemy import insert, select
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from infra.db.user import AuthUser
+from warehouse_service.infra.db.user import AuthUser
 
 
 class AuthUserRepo:

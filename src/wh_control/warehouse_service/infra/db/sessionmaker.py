@@ -15,7 +15,7 @@ class PostgresSessions:
             echo=True,
             pool_size=10,
             max_overflow=15,
-            connect_args={"connect_timeout": 5, "statement_timeout": 30},
+            connect_args={"connect_timeout": 5, "options": "-c statement_timeout=300000"},   
         )
         return async_sessionmaker(
             engine, class_=AsyncSession, autoflush=False, expire_on_commit=False
