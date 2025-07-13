@@ -9,7 +9,8 @@ class AuthUserRepo:
         self.session = session
 
     async def get_by_login(self, login: str) -> AuthUser | None:
-        return await self.session.execute(select(AuthUser).where(AuthUser.login==login))
+        result = await self.session.execute(select(AuthUser).where(AuthUser.login==login))
+        return result.scalar_one_or_none()
     
     async def add_user(self, login: str, password_hash: str, salt: str) -> None:
         return await self.session.execute(insert(AuthUser(login=login, password_hash=password_hash, salt=salt)))

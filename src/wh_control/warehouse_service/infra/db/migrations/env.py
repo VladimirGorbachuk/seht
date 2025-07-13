@@ -12,10 +12,11 @@ from warehouse_service.infra.db.settings import PostgresSettings
 psql_settings = PostgresSettings.from_env()
 config = context.config
 section = config.config_ini_section
-config.set_main_option(
-    "sqlalchemy.url",
-    psql_settings.full_url,
-)
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option(
+        "sqlalchemy.url",
+        psql_settings.full_url,
+    )
 
 # add your model's MetaData object here
 # for 'autogenerate' support

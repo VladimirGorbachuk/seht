@@ -10,7 +10,7 @@ class AuthUser(Base):
     """
     админ
     """
-    __tablename__ = "user"
+    __tablename__ = "auth_user"
 
     uuid: Mapped[UUID] = mapped_column(
         types.UUID,
@@ -26,5 +26,5 @@ class AuthUser(Base):
 
 class Permission(Base):
     """Разрешения - например на добавление товара в склад итд"""
-    __tablename__ = "permission"
+    __tablename__ = "rbac_permission"
     name: Mapped[str] = mapped_column(primary_key=True)
