@@ -66,11 +66,13 @@ class PasswordHasher:
         salt = self._make_salt()
         kdf = self._make_kdf(salt)
         password_hash = kdf.derive(password.encode())
+        print("salt", salt)
         return PasswordHashAndSalt(password_hash=password_hash, salt=salt)
 
     def verify_password_hash(
         self, *, hashed_password_and_salt: PasswordHashAndSalt, password: Password,
     ) -> bool:
+        print("got salt", hashed_password_and_salt.salt)
         kdf = self._make_kdf(hashed_password_and_salt.salt)
         try:
             kdf.verify(password.encode(), hashed_password_and_salt.password_hash)

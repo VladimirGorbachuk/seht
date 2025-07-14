@@ -20,8 +20,8 @@ class AuthUser(Base):
         types.String,
         unique=True,
     )
-    salt: Mapped[str]
-    password_hash: Mapped[str]
+    salt: Mapped[bytes] = mapped_column(types.LargeBinary)
+    password_hash: Mapped[bytes] = mapped_column(types.LargeBinary)
 
 
 class Permission(Base):

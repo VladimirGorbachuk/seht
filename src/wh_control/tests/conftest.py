@@ -10,10 +10,11 @@ from testcontainers.postgres import PostgresContainer
 import alembic
 import pytest
 
+from warehouse_service.infra.db.migrations import ALEMBIC_INI_LOCATION, ALEMBIC_SCRIPT_LOCATION
 from warehouse_service.infra.db.sessionmaker import PostgresSessions
 from warehouse_service.infra.db.settings import PostgresSettings
 from warehouse_service.application.auth import PasswordHasher, PasswordHashSettings
-from warehouse_service.interactors.auth import UserAuthenticate
+from warehouse_service.interactors.auth import UserAuthenticate, UserCreate
 from warehouse_service.repository.auth_user import AuthUserRepo
 
 
@@ -47,9 +48,8 @@ def postgres_container() -> Generator[PostgresContainer, None, None]:
 
 @pytest.fixture()
 def postgres_container_with_migrations(postgres_container: PostgresContainer) -> Generator[PostgresContainer, None, None]:
-    # todo: make specific functionality, it is bad crunch
-    assert "alembic.ini" in os.listdir(), "if fails change dir (make better)"
-    alembic_config = alembic.config.Config(file_="alembic.ini")
+    alembic_config = alembic.config.Config(file_=os.path.join(ALEMBIC_INI_LOCATION, "alembic.ini"))
+    alembic_config.set_main_option("script_location", ALEMBIC_SCRIPT_LOCATION)
     alembic_config.attributes["connection"] = postgres_container.get_connection_url()
     alembic_config.set_main_option(
         "sqlalchemy.url",
@@ -57,9 +57,7 @@ def postgres_container_with_migrations(postgres_container: PostgresContainer) ->
     )
     assert alembic_config.get_main_option("sqlalchemy.url") == postgres_container.get_connection_url()
     assert alembic_config.get_section(alembic_config.config_ini_section, {})["sqlalchemy.url"] == postgres_container.get_connection_url()
-    print("choblya!")
     alembic.command.upgrade(config=alembic_config, revision="head")
-    print("BLYAA")
     yield postgres_container
 
 
@@ -99,3 +97,12 @@ def user_authenticate_interactor_with_rollback(
     password_hasher: PasswordHasher,
 ) -> Generator[UserAuthenticate, None, None]:
     yield UserAuthenticate(password_hasher=password_hasher, auth_user_repo=auth_repo_with_rollback)
+
+
+
+@pytest.fixture()
+def user_create_interactor_with_rollback(
+    auth_repo_with_rollback: AuthUserRepo,
+    password_hasher: PasswordHasher,
+) -> Generator[UserCreate, None, None]:
+    yield UserCreate(password_hasher=password_hasher, auth_user_repo=auth_repo_with_rollback)

@@ -1,10 +1,11 @@
+from uuid import uuid4
+
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 from testcontainers.postgres import PostgresContainer
 
 from warehouse_service.infra.db.settings import PostgresSettings
-from warehouse_service.interactors.auth import UserAuthenticate, UserNotFound
-from warehouse_service.serializers.auth import UserLoginPwd
+from warehouse_service.interactors.auth import UserAuthenticate, UserCreate, UserNotFound
+from warehouse_service.serializers.auth import UserLoginPwd, UserLoginPwdUUID
 
 
 @pytest.mark.asyncio
@@ -19,10 +20,19 @@ async def test_settings_same(
 
 @pytest.mark.asyncio
 async def test_interactor_nonexisting_not_found(
-        async_session_with_rollback: AsyncSession,
         user_authenticate_interactor_with_rollback: UserAuthenticate,
     ):
-    assert await async_session_with_rollback.begin()
     nonexisting = UserLoginPwd(login="testt", password="testt")
     with pytest.raises(UserNotFound):
         await user_authenticate_interactor_with_rollback.authenticate_or_deny_user(nonexisting)
+
+
+@pytest.mark.asyncio
+async def test_interactor_user_create(
+        user_create_interactor_with_rollback: UserCreate,
+        user_authenticate_interactor_with_rollback: UserAuthenticate,
+    ):
+    to_create = UserLoginPwdUUID(login="testt", password="testt", uuid=uuid4())
+    to_check = UserLoginPwd(login=to_create.login, password=to_create.password)
+    await user_create_interactor_with_rollback.create_user(to_create)
+    assert await user_authenticate_interactor_with_rollback.authenticate_or_deny_user(to_check) is True

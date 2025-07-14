@@ -1,28 +1,8 @@
-Мини проект, пример кода по запросу:
-– Kafka/consumer-интеграция с FastAPI (обработка, логика retry / DLQ);
-– микросервис на Celery + RabbitMQ + PostgreSQL;
-– конфигурация CI/CD (docker-compose, .gitlab-ci.yml, multi-stage Dockerfile);
-– реализация SLA-aware логики: например, алерты, фолбэки, управление отказами;
-– внедрение mypy или других инструментов качества в реальном проекте.
+# project theme
+miniproject for warehouse control (microservice sample)
 
 
--- идея проекта: микросервис для управления складами (т.е. бойлерплейт проект)
-дальше уже минималистичный пример:
-у нас будут Юзеры (админы, с различными правами, например добавления товаров или бронирования)
-
-
-
-Общий контекст:
-у нас есть интеграции с другими сервисами (доставка, покупка), откуда, например через Kafka нам приходит информация о заказах
-
-План: 
-   - общий бойлерплейт первым коммитом,
-   - docker-compose
-   - минималистичная бд (предметы, склады, пользователи)
-   - минималистичный апи (CRUD по инвентарю складов, предметов)
-
-
-начать работу локально
+# to start work locally
 python -m venv venv
 venv\Scripts\activate.bat
 source venv/bin/activate
@@ -32,5 +12,5 @@ uv pip install -e ./src/wh_control[tests]
 uv pip install -e ./src/wh_control[lint]
 
 
-с докером
+# with docker
 docker-compose up --build

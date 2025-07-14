@@ -25,8 +25,8 @@ def upgrade() -> None:
     op.create_table('auth_user',
     sa.Column('uuid', sa.UUID(), nullable=False),
     sa.Column('login', sa.String(), nullable=False),
-    sa.Column('salt', sa.String(), nullable=False),
-    sa.Column('password_hash', sa.String(), nullable=False),
+    sa.Column('salt', sa.LargeBinary(), nullable=False),
+    sa.Column('password_hash', sa.LargeBinary(), nullable=False),
     sa.PrimaryKeyConstraint('uuid'),
     sa.UniqueConstraint('login')
     )

@@ -1,7 +1,6 @@
 from warehouse_service.application.auth import PasswordHashAndSalt, PasswordHasher
-from warehouse_service.serializers.auth import UserLoginPwd
+from warehouse_service.serializers.auth import UserLoginPwd, UserLoginPwdUUID
 from warehouse_service.repository.auth_user import AuthUserRepo
-from warehouse_service.infra.db.sessionmaker import PostgresSessions
 
 
 class UserNotFound(Exception):
@@ -13,9 +12,10 @@ class UserCreate:
         self.password_hasher = password_hasher
         self.auth_user_repo = auth_user_repo
 
-    async def create_user(self, user_login_pwd: UserLoginPwd):
+    async def create_user(self, user_login_pwd: UserLoginPwdUUID):
         password_salt_and_hash = self.password_hasher.hash_password(user_login_pwd.password)
         await self.auth_user_repo.add_user(
+            uuid=user_login_pwd.uuid,
             login = user_login_pwd.login,
             salt=password_salt_and_hash.salt,
             password_hash=password_salt_and_hash.password_hash,
