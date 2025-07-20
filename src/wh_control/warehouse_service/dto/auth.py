@@ -1,14 +1,15 @@
+from dataclasses import dataclass
 from uuid import UUID
 
-from pydantic import BaseModel
 
-
-class UserLoginPwd(BaseModel):
+@dataclass
+class UserLoginPwd:
     login: str
     password: str
 
 
-class UserLoginPwdUUID(BaseModel):
+@dataclass
+class UserLoginPwdUUID:
     uuid: UUID
     login: str
     password: str

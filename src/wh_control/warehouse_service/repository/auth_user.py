@@ -2,6 +2,7 @@ from uuid import UUID
 import datetime
 
 from sqlalchemy import insert, select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from warehouse_service.domain.auth import UserAuth, UserAuthSession, AuthSession
@@ -16,7 +17,7 @@ class AuthUserRepo:
         return result.scalar_one_or_none()
     
     async def get_by_session_token(self, session_token: str) -> UserAuthSession | None:
-        result = await self.session.execute(select(UserAuthSession).join(AuthSession).where(AuthSession.session_token==session_token))
+        result = await self.session.execute(select(UserAuthSession).options(joinedload(UserAuthSession.session)).where(AuthSession.session_token==session_token))
         return result.scalar_one_or_none()
 
     async def create_user_session(self, *, session_token: str, dt_created: datetime.datetime, user_uuid: UUID) -> None:

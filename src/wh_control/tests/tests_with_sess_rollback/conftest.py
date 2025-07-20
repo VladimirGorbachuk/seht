@@ -10,12 +10,9 @@ from testcontainers.postgres import PostgresContainer
 import alembic
 import pytest
 
-from warehouse_service.factories.auth_interactors import user_authenticate_from_session, user_create_from_session, session_auth_from_session
 from warehouse_service.infra.db.migrations import ALEMBIC_INI_LOCATION, ALEMBIC_SCRIPT_LOCATION
 from warehouse_service.infra.db.sessionmaker import PostgresSessions
 from warehouse_service.infra.db.settings import PostgresSettings
-from warehouse_service.application.auth import AuthCryptoSettings
-from warehouse_service.interactors.auth import UserAuthenticate, UserCreate, UserAuthenticateBySession
 from warehouse_service.repository.auth_user import AuthUserRepo
 
 
@@ -82,29 +79,6 @@ def async_session_with_rollback(async_sessionmaker: async_sessionmaker) -> Gener
         session.rollback()
 
 
-
 @pytest.fixture()
 def auth_repo_with_rollback(async_session_with_rollback: AsyncSession) -> Generator[AuthUserRepo, None, None]:
     yield AuthUserRepo(session=async_session_with_rollback)
-
-
-
-@pytest.fixture()
-def user_authenticate_interactor_with_rollback(
-    async_session_with_rollback: AsyncSession,
-) -> Generator[UserAuthenticate, None, None]:
-    yield user_authenticate_from_session(sess=async_session_with_rollback, auth_crypto_settings=AuthCryptoSettings())
-
-
-@pytest.fixture()
-def user_create_interactor_with_rollback(
-    async_session_with_rollback: AsyncSession,
-) -> Generator[UserCreate, None, None]:
-    yield user_create_from_session(sess=async_session_with_rollback, auth_crypto_settings=AuthCryptoSettings())
-
-
-@pytest.fixture()
-def user_authenticate_by_session_with_rollback(
-    async_session_with_rollback: AsyncSession,
-) -> Generator[UserAuthenticateBySession, None, None]:
-    yield session_auth_from_session(sess=async_session_with_rollback)

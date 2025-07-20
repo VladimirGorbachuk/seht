@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from .dependencies import UserAuthenticateProtocol, UserCreateProtocol
 from warehouse_service.interactors.auth import UserNotFound
-from warehouse_service.serializers.auth import UserLoginPwd, UserLoginPwdUUID
+from warehouse_service.dto.auth import UserLoginPwd, UserLoginPwdUUID
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])

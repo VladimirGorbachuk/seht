@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from warehouse_service.infra.db.sessionmaker import PostgresSessions, PostgresSettings
 from warehouse_service.interactors.auth import UserCreate, UserAuthenticate
-from warehouse_service.serializers.auth import UserLoginPwd, UserLoginPwdUUID
+from warehouse_service.dto.auth import UserLoginPwd, UserLoginPwdUUID
 
 
 class UserCreateProtocol:
