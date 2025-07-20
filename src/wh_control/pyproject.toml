@@ -18,6 +18,7 @@ dependencies = [
     "cryptography==45.0.5"
 ]
 
+
 [project.optional-dependencies]
 lint = [
     "ruff>=0.12.3",
@@ -29,6 +30,7 @@ tests = [
     "testcontainers[rabbitmq]>=4.10.0",
     "testcontainers[postgres]>=4.10.0"
 ]
+
 
 [build-system]
 requires = ["setuptools==80.9.0", "wheel"]

@@ -1,7 +1,8 @@
-from warehouse_service.application.auth import PasswordHasher
+from warehouse_service.application.auth import PasswordHasher, AuthCryptoSettings
 
 
-def test_pwd_hash(password_hasher: PasswordHasher):
+def test_pwd_hash():
+    password_hasher = PasswordHasher(AuthCryptoSettings())
     password = "asdf"
     pwd_hash_and_salt = password_hasher.hash_password(password)
     assert password_hasher.verify_password_hash(
@@ -10,7 +11,8 @@ def test_pwd_hash(password_hasher: PasswordHasher):
     ) is True
 
 
-def test_pwd_hash_check_fails_different_pwd(password_hasher: PasswordHasher):
+def test_pwd_hash_check_fails_different_pwd():
+    password_hasher = PasswordHasher(AuthCryptoSettings())
     password = "asdf"
     different_password = "asdfg"
     pwd_hash_and_salt = password_hasher.hash_password(password)

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import os
+import secrets
 from typing import NewType
 
 from cryptography.exceptions import InvalidKey
@@ -14,19 +15,23 @@ WebsocketTicker = NewType("WebsocketTicker", str)
 
 
 @dataclass(frozen=True)
-class PasswordHashSettings:
+class AuthCryptoSettings:
+    """
+    still need to find better name for it
+    """
     SALT_LENGTH: int = 16
     HASH_ITERATIONS: int = 480_000
     HASH_LENGTH: int = 32
+    SESSION_ID_HEXADECIMAL_CHARS: int = 16
 
     @classmethod
-    def initialize_from_environment(cls) -> "PasswordHashSettings":
+    def initialize_from_environment(cls) -> "AuthCryptoSettings":
         return cls(
             SALT_LENGTH=int(os.environ.get("PASSWORD_SALT_LENGTH", 16)),
             HASH_ITERATIONS=int(os.environ.get("PASSWORD_HASH_ITERATIONS", 480_000)),
             HASH_LENGTH=int(os.environ.get("PASSWORD_HASH_LENGTH", 32)),
+            SESSION_ID_HEXADECIMAL_CHARS = int(os.environ.get("SESSION_ID_HEXADECIMAL_CHARS", 16))
         )
-
 
 
 class AuthenticationFailureError(Exception):
@@ -48,7 +53,7 @@ class PasswordHashAndSalt:
 
 
 class PasswordHasher:
-    def __init__(self, password_hash_settings: PasswordHashSettings):
+    def __init__(self, password_hash_settings: AuthCryptoSettings):
         self.settings = password_hash_settings
 
     def _make_salt(self) -> Salt:
@@ -66,13 +71,11 @@ class PasswordHasher:
         salt = self._make_salt()
         kdf = self._make_kdf(salt)
         password_hash = kdf.derive(password.encode())
-        print("salt", salt)
         return PasswordHashAndSalt(password_hash=password_hash, salt=salt)
 
     def verify_password_hash(
         self, *, hashed_password_and_salt: PasswordHashAndSalt, password: Password,
     ) -> bool:
-        print("got salt", hashed_password_and_salt.salt)
         kdf = self._make_kdf(hashed_password_and_salt.salt)
         try:
             kdf.verify(password.encode(), hashed_password_and_salt.password_hash)
@@ -81,3 +84,10 @@ class PasswordHasher:
             return False
 
 
+
+class SessionTokenCreator:
+    def __init__(self, settings: AuthCryptoSettings):
+        self.settings = settings
+
+    def make_hex_token(self) -> str:
+        return secrets.token_hex(self.settings.SESSION_ID_HEXADECIMAL_CHARS)

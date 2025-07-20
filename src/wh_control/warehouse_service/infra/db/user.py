@@ -1,14 +1,14 @@
 
-from sqlalchemy import Table, Column, String, LargeBinary, UUID as SQLUUID, ForeignKey
-from sqlalchemy.orm import registry
+from sqlalchemy import Table, Column, String, LargeBinary, UUID as SQLUUID, ForeignKey, DateTime
+from sqlalchemy.orm import registry, relationship
 
-from warehouse_service.domain.auth import UserAuth
+from warehouse_service.domain.auth import UserAuth, UserAuthSession, AuthSession, Permission
 
 # Create a registry
 mapper_registry = registry()
 Base = mapper_registry.generate_base()
 
-# AuthUser table definition
+
 auth_user_table = Table(
     "auth_user",
     mapper_registry.metadata,
@@ -18,19 +18,28 @@ auth_user_table = Table(
     Column("password_hash", LargeBinary),
 )
 
-# Permission table definition
+
+user_session_table = Table(
+    "auth_session",
+    mapper_registry.metadata,
+    Column("session_key", String, primary_key=True),
+    Column("user_uuid", SQLUUID, ForeignKey("auth_user.uuid", ondelete="CASCADE"), nullable=False),
+    Column("last_login", DateTime, nullable=False)
+)
+
+
 permission_table = Table(
-    "rbac_permission",
+    "global_permission",
     mapper_registry.metadata,
     Column("name", String, primary_key=True),
 )
 
-# Association table for many-to-many relationship
+
 user_permission_table = Table(
     "auth_user_permission",
     mapper_registry.metadata,
-    Column("user_uuid", SQLUUID, ForeignKey("auth_user.uuid"), primary_key=True),
-    Column("permission_name", String, ForeignKey("rbac_permission.name"), primary_key=True),
+    Column("user_uuid", SQLUUID, ForeignKey("auth_user.uuid", ondelete="CASCADE"), primary_key=True),
+    Column("permission_name", String, ForeignKey("global_permission.name"), primary_key=True),
 )
 
 
@@ -44,4 +53,30 @@ mapper_registry.map_imperatively(
         'salt': auth_user_table.c.salt,
         'password_hash': auth_user_table.c.password_hash,
     }
+)
+
+
+mapper_registry.map_imperatively(
+    AuthSession,
+    user_session_table
+)
+
+
+
+mapper_registry.map_imperatively(
+    Permission,
+    permission_table,
+    properties = {
+        "permission": permission_table.c.name
+    }
+)
+
+
+mapper_registry.map_imperatively(
+    UserAuthSession,
+    auth_user_table,
+    properties={
+        "session": relationship(AuthSession, backref="auth_user_table", uselist=False),
+        "permissions": relationship(Permission, secondary="auth_user_permission", backref="global_permission")
+    },
 )
