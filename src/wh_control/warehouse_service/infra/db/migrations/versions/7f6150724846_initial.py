@@ -37,7 +37,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "auth_session",
-        sa.Column("session_key", sa.String, primary_key=True),
+        sa.Column("session_token", sa.String, primary_key=True),
         sa.Column("user_uuid", sa.UUID(), sa.ForeignKey("auth_user.uuid", ondelete="CASCADE"), nullable=False),
         sa.Column("last_login", sa.DateTime, nullable=False),
     )

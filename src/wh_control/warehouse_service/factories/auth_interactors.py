@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from warehouse_service.interactors.auth import UserAuthenticate, UserCreate, UserAuthenticateBySession
@@ -9,15 +11,26 @@ def user_authenticate_from_session(sess: AsyncSession, auth_crypto_settings: Aut
     hasher = PasswordHasher(auth_crypto_settings)
     auth_session_creator = SessionTokenCreator(auth_crypto_settings)
     auth_repo = AuthUserRepo(sess)
-    return UserAuthenticate(password_hasher=hasher, auth_user_repo=auth_repo, auth_session_creator=auth_session_creator)
+    return UserAuthenticate(
+        password_hasher=hasher,
+        auth_user_repo=auth_repo,
+        auth_session_creator=auth_session_creator,
+        dt_now=datetime.datetime.now(),
+    )
 
 
 def user_create_from_session(sess: AsyncSession, auth_crypto_settings: AuthCryptoSettings) -> UserCreate:
     hasher = PasswordHasher(auth_crypto_settings)
     auth_repo = AuthUserRepo(sess)
-    return UserCreate(password_hasher=hasher, auth_user_repo=auth_repo)
+    return UserCreate(
+        password_hasher=hasher,
+        auth_user_repo=auth_repo,
+    )
 
 
 def session_auth_from_session(sess: AsyncSession) -> UserAuthenticateBySession:
     auth_repo = AuthUserRepo(sess)
-    return UserAuthenticateBySession(auth_user_repo=auth_repo)
+    return UserAuthenticateBySession(
+        auth_user_repo=auth_repo,
+        dt_now=datetime.datetime.now(),
+    )

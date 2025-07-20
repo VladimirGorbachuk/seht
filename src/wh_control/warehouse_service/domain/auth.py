@@ -21,7 +21,8 @@ class UserAuth:
 
 @dataclass
 class AuthSession:
-    session_key: str
+    user_uuid: UUID
+    session_token: str
     last_login: datetime.datetime
 
 

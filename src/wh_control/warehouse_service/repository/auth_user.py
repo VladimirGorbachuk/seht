@@ -16,15 +16,15 @@ class AuthUserRepo:
         return result.scalar_one_or_none()
     
     async def get_by_session_token(self, session_token: str) -> UserAuthSession | None:
-        result = await self.session.execute(select(UserAuthSession).join(AuthSession).where(AuthSession.session_key==session_token))
+        result = await self.session.execute(select(UserAuthSession).join(AuthSession).where(AuthSession.session_token==session_token))
         return result.scalar_one_or_none()
 
     async def create_user_session(self, *, session_token: str, dt_created: datetime.datetime, user_uuid: UUID) -> None:
         await self.session.execute(
-            insert(UserAuthSession).values(
+            insert(AuthSession).values(
                 session_token=session_token,
                 user_uuid=user_uuid,
-                dt_created=dt_created,
+                last_login=dt_created,
             )
         )
 

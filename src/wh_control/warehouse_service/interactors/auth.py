@@ -30,10 +30,18 @@ class UserCreate:
 
 
 class UserAuthenticate:
-    def __init__(self, *, password_hasher: PasswordHasher, auth_user_repo: AuthUserRepo, auth_session_creator: SessionTokenCreator):
+    def __init__(
+        self,
+        *,
+        password_hasher: PasswordHasher,
+        auth_user_repo: AuthUserRepo,
+        auth_session_creator: SessionTokenCreator,
+        dt_now: datetime.datetime,
+    ):
         self.password_hasher = password_hasher
         self.auth_user_repo = auth_user_repo
         self.auth_session_creator = auth_session_creator
+        self.dt_now = dt_now
 
     async def authenticate_or_deny_user(self, user_login_pwd: UserLoginPwd) -> str:
         user_or_none = await self.auth_user_repo.get_by_login(login=user_login_pwd.login)
@@ -48,9 +56,9 @@ class UserAuthenticate:
         )
         if verified:
             session_token = self.auth_session_creator.make_hex_token()
-            self.auth_user_repo.create_user_session(
+            await self.auth_user_repo.create_user_session(
                 session_token=session_token, 
-                dt_created=datetime.datetime.now(),
+                dt_created=self.dt_now,
                 user_uuid=user_or_none.uuid,
             )
             return session_token
@@ -58,8 +66,9 @@ class UserAuthenticate:
 
 
 class UserAuthenticateBySession:
-    def __init__(self, *, auth_user_repo: AuthUserRepo):
+    def __init__(self, *, auth_user_repo: AuthUserRepo, dt_now: datetime.datetime):
         self.auth_user_repo = auth_user_repo
+        self.dt_now = dt_now
 
     async def authenticate_or_deny_user(self, user_session_token: str) -> UserAuthSession:
         # todo: need to amend current dt here!

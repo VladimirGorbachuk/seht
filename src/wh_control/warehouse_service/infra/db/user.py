@@ -22,7 +22,7 @@ auth_user_table = Table(
 user_session_table = Table(
     "auth_session",
     mapper_registry.metadata,
-    Column("session_key", String, primary_key=True),
+    Column("session_token", String, primary_key=True),
     Column("user_uuid", SQLUUID, ForeignKey("auth_user.uuid", ondelete="CASCADE"), nullable=False),
     Column("last_login", DateTime, nullable=False)
 )
@@ -58,7 +58,12 @@ mapper_registry.map_imperatively(
 
 mapper_registry.map_imperatively(
     AuthSession,
-    user_session_table
+    user_session_table,
+    properties={
+        "user_uuid": user_session_table.c.user_uuid,
+        "session_token": user_session_table.c.session_token,
+        "last_login": user_session_table.c.last_login,
+    }
 )
 
 

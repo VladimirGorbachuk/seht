@@ -25,7 +25,7 @@ def event_loop_policy():
         yield asyncio.WindowsSelectorEventLoopPolicy()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def postgres_container() -> Generator[PostgresContainer, None, None]:
     postgres = PostgresContainer(
         "postgres:16", 
@@ -40,7 +40,7 @@ def postgres_container() -> Generator[PostgresContainer, None, None]:
 
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def postgres_container_with_migrations(postgres_container: PostgresContainer) -> Generator[PostgresContainer, None, None]:
     alembic_config = alembic.config.Config(file_=os.path.join(ALEMBIC_INI_LOCATION, "alembic.ini"))
     alembic_config.set_main_option("script_location", ALEMBIC_SCRIPT_LOCATION)
@@ -56,7 +56,7 @@ def postgres_container_with_migrations(postgres_container: PostgresContainer) ->
 
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def postgres_settings(postgres_container_with_migrations: PostgresContainer) -> Generator[PostgresSettings, None, None]:
     port = urlparse(postgres_container_with_migrations.get_connection_url()).port
     yield PostgresSettings(
@@ -68,12 +68,15 @@ def postgres_settings(postgres_container_with_migrations: PostgresContainer) -> 
     )
 
 
+@pytest.fixture(scope="module")
+def async_sessionmaker(postgres_settings: PostgresSettings) -> Generator[AsyncSession, None, None]:
+    yield PostgresSessions(postgres_settings).create_async_sessionmaker()
+
 
 @pytest.fixture()
-def async_session_with_rollback(postgres_settings: PostgresSettings) -> Generator[AsyncSession, None, None]:
-    session_maker = PostgresSessions(postgres_settings).create_async_sessionmaker()
+def async_session_with_rollback(async_sessionmaker: async_sessionmaker) -> Generator[AsyncSession, None, None]:
     try:
-        session = session_maker()
+        session = async_sessionmaker()
         yield session
     finally:
         session.rollback()
