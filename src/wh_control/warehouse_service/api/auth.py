@@ -12,7 +12,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def add_user(
     user_data: UserLoginPwdUUID,
     user_create: UserCreateProtocol = Depends(),
-):
+) -> dict[str, str]:
     """Create a new user account (and should add check if permissions allow)"""
     await user_create.create_user(user_data)
     return {"message": "User created successfully"}

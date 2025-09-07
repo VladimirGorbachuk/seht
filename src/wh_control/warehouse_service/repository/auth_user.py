@@ -5,7 +5,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from warehouse_service.domain.auth import UserAuth, UserAuthSession, AuthSession
+from warehouse_service.entities.auth import UserAuth, UserAuthSession, AuthSession
 
 
 class AuthUserRepo:
@@ -27,7 +27,11 @@ class AuthUserRepo:
         return result.scalar_one_or_none()
 
     async def create_user_session(
-        self, *, session_token: str, dt_created: datetime.datetime, user_uuid: UUID
+        self,
+        *,
+        session_token: str,
+        dt_created: datetime.datetime,
+        user_uuid: UUID,
     ) -> None:
         await self.session.execute(
             insert(AuthSession).values(
@@ -39,7 +43,7 @@ class AuthUserRepo:
 
     async def add_user(
         self, *, uuid: UUID, login: str, password_hash: bytes, salt: bytes
-    ) -> None:
+    ) -> UserAuth:
         return await self.session.execute(
             insert(UserAuth)
             .values(

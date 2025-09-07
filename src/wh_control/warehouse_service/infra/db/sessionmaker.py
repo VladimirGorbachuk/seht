@@ -1,3 +1,5 @@
+from typing import Protocol
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -5,11 +7,16 @@ from sqlalchemy.orm import sessionmaker
 from warehouse_service.infra.db.settings import PostgresSettings
 
 
+class AsyncSessionmakerProtocol(Protocol):
+    def __call__(self) -> AsyncSession:
+        pass
+
+
 class PostgresSessions:
     def __init__(self, settings: PostgresSettings):
         self.settings = settings
 
-    def create_async_sessionmaker(self) -> async_sessionmaker:
+    def create_async_sessionmaker(self) -> AsyncSessionmakerProtocol:
         engine = create_async_engine(
             self.settings.full_url,
             echo=True,
@@ -36,3 +43,8 @@ class PostgresSessions:
             },
         )
         return sessionmaker(engine, autoflush=False, expire_on_commit=False)
+
+
+def async_sessionmaker_from_env() -> AsyncSessionmakerProtocol:
+    settings = PostgresSettings.from_env()
+    return PostgresSessions(settings).create_async_sessionmaker()

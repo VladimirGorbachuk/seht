@@ -2,17 +2,12 @@ from dataclasses import dataclass
 import datetime
 import os
 import secrets
-from typing import NewType
 
 from cryptography.exceptions import InvalidKey
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-
-Password = NewType("Password", str)
-Salt = NewType("Salt", bytes)
-PasswordHash = NewType("PasswordHash", bytes)
-WebsocketTicker = NewType("WebsocketTicker", str)
+from warehouse_service.entities.auth import PasswordHash, Password, Salt
 
 
 @dataclass(frozen=True)

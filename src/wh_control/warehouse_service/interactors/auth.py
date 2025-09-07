@@ -1,11 +1,12 @@
 import datetime
+from typing import Protocol
 
 from warehouse_service.application.auth import (
     PasswordHashAndSalt,
     PasswordHasher,
     AuthTokenController,
 )
-from warehouse_service.domain.auth import UserAuthSession
+from warehouse_service.entities.auth import UserAuthSession
 from warehouse_service.dto.auth import UserLoginPwd, UserLoginPwdUUID
 from warehouse_service.repository.auth_user import AuthUserRepo
 
@@ -18,14 +19,35 @@ class UserSessionNotFoundOrExpired(Exception):
     pass
 
 
-class UserCreate:
+class UserVerifyFailed(Exception):
+    pass
+
+
+class UserCreateProtocol(Protocol):
+    async def create_user(self, user_login_pwd: UserLoginPwdUUID) -> None:
+        raise NotImplementedError
+
+
+class UserAuthenticateProtocol(Protocol):
+    async def authenticate_or_deny_user(self, user_login_pwd: UserLoginPwd) -> bool:
+        raise NotImplementedError
+
+
+class UserAuthenticateBySessionProtocol(Protocol):
+    async def authenticate_or_deny_user(
+        self, user_session_token: str
+    ) -> UserAuthSession:
+        raise NotImplementedError
+
+
+class UserCreate(UserCreateProtocol):
     def __init__(
         self, *, password_hasher: PasswordHasher, auth_user_repo: AuthUserRepo
     ):
         self.password_hasher = password_hasher
         self.auth_user_repo = auth_user_repo
 
-    async def create_user(self, user_login_pwd: UserLoginPwdUUID):
+    async def create_user(self, user_login_pwd: UserLoginPwdUUID) -> None:
         password_salt_and_hash = self.password_hasher.hash_password(
             user_login_pwd.password
         )
@@ -37,7 +59,7 @@ class UserCreate:
         )
 
 
-class UserAuthenticate:
+class UserAuthenticate(UserAuthenticateProtocol):
     def __init__(
         self,
         *,
@@ -64,18 +86,18 @@ class UserAuthenticate:
             ),
             password=user_login_pwd.password,
         )
-        if verified:
-            session_token = self.auth_token_controller.make_hex_token()
-            await self.auth_user_repo.create_user_session(
-                session_token=session_token,
-                dt_created=self.dt_now,
-                user_uuid=user_or_none.uuid,
-            )
-            return session_token
-        return None
+        if not verified:
+            raise UserVerifyFailed
+        session_token = self.auth_token_controller.make_hex_token()
+        await self.auth_user_repo.create_user_session(
+            session_token=session_token,
+            dt_created=self.dt_now,
+            user_uuid=user_or_none.uuid,
+        )
+        return session_token
 
 
-class UserAuthenticateBySession:
+class UserAuthenticateBySession(UserAuthenticateBySessionProtocol):
     def __init__(
         self,
         *,

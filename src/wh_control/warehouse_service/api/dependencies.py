@@ -2,34 +2,34 @@ import functools
 from typing import AsyncGenerator
 
 from fastapi import Depends, FastAPI
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from warehouse_service.infra.db.sessionmaker import PostgresSessions, PostgresSettings
-from warehouse_service.interactors.auth import UserCreate, UserAuthenticate
-from warehouse_service.dto.auth import UserLoginPwd, UserLoginPwdUUID
-
-
-class UserCreateProtocol:
-    async def create_user(self, user_login_pwd: UserLoginPwdUUID):
-        raise NotImplementedError
-
-
-class UserAuthenticateProtocol:
-    async def authenticate_or_deny_user(self, user_login_pwd: UserLoginPwd) -> bool:
-        raise NotImplementedError
+from warehouse_service.infra.db.sessionmaker import (
+    async_sessionmaker_from_env,
+    AsyncSessionmakerProtocol,
+)
+from warehouse_service.interactors.auth import (
+    UserAuthenticateBySessionProtocol,
+    UserAuthenticateProtocol,
+    UserCreateProtocol,
+)
+from warehouse_service.interactors.factories.auth import (
+    user_authenticate_initialize,
+    user_create_initialize,
+    session_auth_initialize,
+)
 
 
 @functools.lru_cache(maxsize=1)
-def provide_sessionmaker() -> async_sessionmaker:
-    settings = PostgresSettings.from_env()
-    return PostgresSessions(settings).create_async_sessionmaker()
+def provide_sessionmaker() -> AsyncSessionmakerProtocol:
+    return async_sessionmaker_from_env()
 
 
 async def make_session(
-    sessionmaker: async_sessionmaker = Depends(),
+    sessionmaker: AsyncSessionmakerProtocol = Depends(),
 ) -> AsyncGenerator[AsyncSession, None]:
     try:
-        session = await sessionmaker()
+        session = sessionmaker.begin()
         yield session
     except Exception:
         await session.rollback()
@@ -37,23 +37,34 @@ async def make_session(
         await session.close()
 
 
-def user_create_inj(session: AsyncSession = Depends()) -> UserCreate:
-    return UserCreate(session)
+def provide_user_create(
+    session: AsyncSession = Depends(),
+) -> UserCreateProtocol:
+    return user_create_initialize(sess=session)
 
 
-def user_authenticate_inj(session: AsyncSession = Depends()) -> UserAuthenticate:
-    return UserAuthenticate(session)
+def provide_user_authenticate(
+    session: AsyncSession = Depends(),
+) -> UserAuthenticateProtocol:
+    return user_authenticate_initialize(sess=session)
 
 
-def set_dependency_injection(app: FastAPI):
+def provide_user_authenticate_by_session(
+    session: AsyncSession = Depends(),
+) -> UserAuthenticateBySessionProtocol:
+    return session_auth_initialize(sess=session)
+
+
+def set_dependency_injection(app: FastAPI) -> None:
     """
     should rewrite to Dishka
     """
     app.dependency_overrides.update(
         {
-            async_sessionmaker: provide_sessionmaker,
+            AsyncSessionmakerProtocol: provide_sessionmaker,
             AsyncSession: make_session,
-            UserCreateProtocol: user_create_inj,
-            UserAuthenticateProtocol: user_authenticate_inj,
+            UserCreateProtocol: provide_user_create,
+            UserAuthenticateProtocol: provide_user_authenticate,
+            UserAuthenticateBySessionProtocol: provide_user_authenticate_by_session,
         }
     )

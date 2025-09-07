@@ -9,7 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import registry, relationship
 
-from warehouse_service.domain.auth import (
+from warehouse_service.entities.auth import (
     UserAuth,
     UserAuthSession,
     AuthSession,

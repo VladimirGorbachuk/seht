@@ -1,7 +1,7 @@
 import asyncio
 import os
 import sys
-from typing import Generator
+from typing import AsyncGenerator, Generator
 from urllib.parse import urlparse
 
 import alembic.config
@@ -14,7 +14,10 @@ from warehouse_service.infra.db.migrations import (
     ALEMBIC_INI_LOCATION,
     ALEMBIC_SCRIPT_LOCATION,
 )
-from warehouse_service.infra.db.sessionmaker import PostgresSessions
+from warehouse_service.infra.db.sessionmaker import (
+    AsyncSessionmakerProtocol,
+    PostgresSessions,
+)
 from warehouse_service.infra.db.settings import PostgresSettings
 from warehouse_service.repository.auth_user import AuthUserRepo
 
@@ -78,26 +81,20 @@ def postgres_settings(
     )
 
 
-@pytest.fixture(scope="module")
-def async_sessionmaker(
+@pytest.fixture()
+def async_session(
     postgres_settings: PostgresSettings,
-) -> Generator[AsyncSession, None, None]:
+) -> Generator[AsyncSessionmakerProtocol, None, None]:
     yield PostgresSessions(postgres_settings).create_async_sessionmaker()
+
 
 
 @pytest.fixture()
 def async_session_with_rollback(
-    async_sessionmaker: async_sessionmaker,
+    async_session: AsyncSessionmakerProtocol,
 ) -> Generator[AsyncSession, None, None]:
     try:
-        session = async_sessionmaker()
+        session = async_session()
         yield session
     finally:
         session.rollback()
-
-
-@pytest.fixture()
-def auth_repo_with_rollback(
-    async_session_with_rollback: AsyncSession,
-) -> Generator[AuthUserRepo, None, None]:
-    yield AuthUserRepo(session=async_session_with_rollback)

@@ -1,17 +1,21 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import NewType
 from uuid import UUID
 import datetime
 
 
-# TODO: specify user uuid type
+Password = NewType("Password", str)
+Salt = NewType("Salt", bytes)
+PasswordHash = NewType("PasswordHash", bytes)
 
 
 @dataclass
 class UserAuth:
     uuid: UUID
     login: str
-    password: str
+    salt: Salt
+    password_hash: PasswordHash
 
     def create_related_session(
         self, *, login_dt: datetime.datetime, session_key: str
