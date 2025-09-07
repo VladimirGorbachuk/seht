@@ -18,6 +18,10 @@ dependencies = [
     "cryptography==45.0.5"
 ]
 
+[project.scripts]
+wh-service = "warehouse_service.api.main:init_app"
+upgrade = "warehouse_service.infra.db.migrations.migrations:upgrade"
+
 
 [project.optional-dependencies]
 lint = [

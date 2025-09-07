@@ -25,12 +25,13 @@ def provide_sessionmaker() -> async_sessionmaker:
     return PostgresSessions(settings).create_async_sessionmaker()
 
 
-async def make_session(sessionmaker: async_sessionmaker = Depends()) -> AsyncGenerator[AsyncSession, None]:
+async def make_session(
+    sessionmaker: async_sessionmaker = Depends(),
+) -> AsyncGenerator[AsyncSession, None]:
     try:
         session = await sessionmaker()
         yield session
-    except Exception as e:
-        print("should log here", e)
+    except Exception:
         await session.rollback()
     finally:
         await session.close()
@@ -44,14 +45,15 @@ def user_authenticate_inj(session: AsyncSession = Depends()) -> UserAuthenticate
     return UserAuthenticate(session)
 
 
-
 def set_dependency_injection(app: FastAPI):
     """
     should rewrite to Dishka
     """
-    app.dependency_overrides.update({
-        async_sessionmaker: provide_sessionmaker,
-        AsyncSession: make_session,
-        UserCreateProtocol: user_create_inj,
-        UserAuthenticateProtocol: user_authenticate_inj,
-    })
+    app.dependency_overrides.update(
+        {
+            async_sessionmaker: provide_sessionmaker,
+            AsyncSession: make_session,
+            UserCreateProtocol: user_create_inj,
+            UserAuthenticateProtocol: user_authenticate_inj,
+        }
+    )

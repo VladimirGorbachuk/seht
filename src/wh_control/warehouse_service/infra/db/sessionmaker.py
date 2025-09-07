@@ -8,14 +8,17 @@ from warehouse_service.infra.db.settings import PostgresSettings
 class PostgresSessions:
     def __init__(self, settings: PostgresSettings):
         self.settings = settings
-            
+
     def create_async_sessionmaker(self) -> async_sessionmaker:
         engine = create_async_engine(
             self.settings.full_url,
             echo=True,
             pool_size=10,
             max_overflow=15,
-            connect_args={"connect_timeout": 5, "options": "-c statement_timeout=10000"},   
+            connect_args={
+                "connect_timeout": 5,
+                "options": "-c statement_timeout=10000",
+            },
         )
         return async_sessionmaker(
             engine, class_=AsyncSession, autoflush=False, expire_on_commit=False
@@ -27,6 +30,9 @@ class PostgresSessions:
             echo=True,
             pool_size=10,
             max_overflow=15,
-            connect_args={"connect_timeout": 5, "options": "-c statement_timeout=100000"},
+            connect_args={
+                "connect_timeout": 5,
+                "options": "-c statement_timeout=100000",
+            },
         )
         return sessionmaker(engine, autoflush=False, expire_on_commit=False)

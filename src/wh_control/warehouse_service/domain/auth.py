@@ -4,8 +4,8 @@ from uuid import UUID
 import datetime
 
 
-
 # TODO: specify user uuid type
+
 
 @dataclass
 class UserAuth:
@@ -13,7 +13,9 @@ class UserAuth:
     login: str
     password: str
 
-    def create_related_session(self, *, login_dt: datetime.datetime, session_key: str) -> "UserAuthSession":
+    def create_related_session(
+        self, *, login_dt: datetime.datetime, session_key: str
+    ) -> "UserAuthSession":
         """use in successful auth scenario, e.g. if password matches"""
         session = AuthSession(session_key=session_key, last_login=login_dt)
         return UserAuthSession(uuid=self.uuid, session=session)
@@ -31,6 +33,7 @@ class GlobalPermissionEnum(StrEnum):
     company-level permissions equivalent of superuser role,
     better switch to more fine-grained permissions
     """
+
     CAN_ADD_USER = "can add other users"
     CAN_ADD_WAREHOUSE = "can add warehouse"
 
@@ -45,7 +48,7 @@ class UserAuthSession:
     """
     currently contains only global permissions, would later add other fine-grained rbac
     """
+
     uuid: UUID
     session: AuthSession
     permissions: tuple[GlobalPermissionEnum]
-

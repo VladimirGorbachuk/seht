@@ -24,15 +24,15 @@ async def login_user(
     user_authenticate: UserAuthenticateProtocol = Depends(),
 ):
     try:
-        is_authenticated = await user_authenticate.authenticate_or_deny_user(credentials)
+        is_authenticated = await user_authenticate.authenticate_or_deny_user(
+            credentials
+        )
         if not is_authenticated:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect password"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password"
             )
         return {"message": "Login successful"}
     except UserNotFound:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )

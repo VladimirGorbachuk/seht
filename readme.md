@@ -1,5 +1,5 @@
 # project theme
-miniproject for warehouse control (microservice sample)
+miniproject for warehouse control (single microservice sample)
 
 
 # to start work locally

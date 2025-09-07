@@ -13,14 +13,22 @@ class AuthUserRepo:
         self.session = session
 
     async def get_by_login(self, login: str) -> UserAuth | None:
-        result = await self.session.execute(select(UserAuth).where(UserAuth.login==login))
-        return result.scalar_one_or_none()
-    
-    async def get_by_session_token(self, session_token: str) -> UserAuthSession | None:
-        result = await self.session.execute(select(UserAuthSession).options(joinedload(UserAuthSession.session)).where(AuthSession.session_token==session_token))
+        result = await self.session.execute(
+            select(UserAuth).where(UserAuth.login == login)
+        )
         return result.scalar_one_or_none()
 
-    async def create_user_session(self, *, session_token: str, dt_created: datetime.datetime, user_uuid: UUID) -> None:
+    async def get_by_session_token(self, session_token: str) -> UserAuthSession | None:
+        result = await self.session.execute(
+            select(UserAuthSession)
+            .options(joinedload(UserAuthSession.session))
+            .where(AuthSession.session_token == session_token)
+        )
+        return result.scalar_one_or_none()
+
+    async def create_user_session(
+        self, *, session_token: str, dt_created: datetime.datetime, user_uuid: UUID
+    ) -> None:
         await self.session.execute(
             insert(AuthSession).values(
                 session_token=session_token,
@@ -29,12 +37,16 @@ class AuthUserRepo:
             )
         )
 
-    async def add_user(self, *, uuid: UUID, login: str, password_hash: bytes, salt: bytes) -> None:
+    async def add_user(
+        self, *, uuid: UUID, login: str, password_hash: bytes, salt: bytes
+    ) -> None:
         return await self.session.execute(
-            insert(UserAuth).values(
+            insert(UserAuth)
+            .values(
                 uuid=uuid,
                 login=login,
                 password_hash=password_hash,
                 salt=salt,
-            ).returning(UserAuth),
+            )
+            .returning(UserAuth),
         )

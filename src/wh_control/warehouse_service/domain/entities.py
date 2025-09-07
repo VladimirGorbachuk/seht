@@ -2,13 +2,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 
-
-
 @dataclass
 class DeliveryFromTo:
     from_uuid: UUID
     to_uuid: UUID
-     
+
 
 @dataclass
 class ItemSize:
@@ -32,9 +30,9 @@ class ItemQuantity:
      - available in warehouse
      - reserved for user cart service
     """
+
     item: Item
     quantity: int
-
 
 
 @dataclass
@@ -44,4 +42,3 @@ class WareHouse:
 
     def add_items(self, item_quantity: ItemQuantity):
         self.item_quantities
-
