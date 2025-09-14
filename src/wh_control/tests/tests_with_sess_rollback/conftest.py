@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 from typing import Generator
+from unittest.mock import AsyncMock
 from urllib.parse import urlparse
 
 import alembic.config
@@ -87,13 +88,13 @@ def async_session(
     yield PostgresSessions(postgres_settings).create_async_sessionmaker()
 
 
-
 @pytest.fixture()
 def async_session_with_rollback(
     async_session: AsyncSessionmakerProtocol,
 ) -> Generator[AsyncSession, None, None]:
     try:
         session = async_session()
+        session.commit = AsyncMock()
         yield session
     finally:
         session.rollback()  # todo: should await

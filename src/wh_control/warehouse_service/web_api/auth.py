@@ -5,7 +5,12 @@ from fastapi.responses import JSONResponse
 
 from .dependencies import UserAuthenticateProtocol, UserCreateProtocol
 from .serializers import UserLoginPwdSerializer
-from warehouse_service.interactors.auth import UserNotFound, UserVerifyFailed, UserAuthenticateBySessionProtocol, UserSessionNotFoundOrExpired
+from warehouse_service.interactors.auth import (
+    UserNotFound,
+    UserVerifyFailed,
+    UserAuthenticateBySessionProtocol,
+    UserSessionNotFoundOrExpired,
+)
 from warehouse_service.dto.auth import UserLoginPwdUUID
 
 
@@ -20,9 +25,14 @@ async def add_user(
     user_create: UserCreateProtocol = Depends(),
     user_auth_by_session: UserAuthenticateBySessionProtocol = Depends(),
     sessionid: str | None = Cookie(None),
-) -> dict[str, str]:
+) -> JSONResponse:
     """Create a new user account (and should add check if permissions allow)"""
     logger.info("got following sessionid %s", sessionid)
+    if not sessionid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="no session cookie",
+        )
     try:
         user = await user_auth_by_session.authenticate_or_deny_user(sessionid)
         logger.info("user is %s", user)
@@ -59,7 +69,7 @@ async def login_user(
             httponly=True,
             secure=True,
             samesite="strict",
-            max_age=3600, 
+            max_age=3600,
             path="/",
         )
         return response

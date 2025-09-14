@@ -21,7 +21,9 @@ class UserAuth:
         self, *, login_dt: datetime.datetime, session_token: str
     ) -> "UserAuthSession":
         """use in successful auth scenario, e.g. if password matches"""
-        session = AuthSession(session_token=session_token, last_login=login_dt, user_uuid=self.uuid)
+        session = AuthSession(
+            session_token=session_token, last_login=login_dt, user_uuid=self.uuid
+        )
         return UserAuthSession(uuid=self.uuid, session=session)
 
 

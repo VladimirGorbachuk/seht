@@ -44,7 +44,11 @@ class UserAuthenticateBySessionProtocol(Protocol):
 
 class UserCreate(UserCreateProtocol):
     def __init__(
-        self, *, password_hasher: PasswordHasher, auth_user_repo: AuthUserRepo, session: AsyncSession,
+        self,
+        *,
+        password_hasher: PasswordHasher,
+        auth_user_repo: AuthUserRepo,
+        session: AsyncSession,
     ):
         self.password_hasher = password_hasher
         self.auth_user_repo = auth_user_repo
@@ -119,7 +123,7 @@ class UserAuthenticateBySession(UserAuthenticateBySessionProtocol):
         self.session = session
 
     async def authenticate_or_deny_user(
-        self, 
+        self,
         user_session_token: str,
     ) -> UserAuthSession:
         auth_session_or_none = await self.auth_user_repo.get_by_session_token(

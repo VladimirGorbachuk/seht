@@ -1,7 +1,8 @@
 from uuid import UUID
 import datetime
 
-from sqlalchemy import insert, select
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,10 +35,18 @@ class AuthUserRepo:
         user_uuid: UUID,
     ) -> None:
         await self.session.execute(
-            insert(AuthSession).values(
+            insert(AuthSession)
+            .values(
                 session_token=session_token,
                 user_uuid=user_uuid,
                 last_login=dt_created,
+            )
+            .on_conflict_do_update(
+                index_elements=["user_uuid"],
+                set_={
+                    "session_token": session_token,
+                    "last_login": dt_created,
+                },
             )
         )
 

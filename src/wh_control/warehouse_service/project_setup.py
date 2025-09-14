@@ -28,7 +28,9 @@ async def create_user():
             await interactor.create_user(user_login_pwd=default_user)
             await session.commit()
             logger.info("created_successfully")
-    raise ValueError("provide 'DEFAULT_USER_LOGIN' and 'DEFAULT_USER_PASSWORD' env variables")
+    raise ValueError(
+        "provide 'DEFAULT_USER_LOGIN' and 'DEFAULT_USER_PASSWORD' env variables"
+    )
 
 
 def create_default_user():
