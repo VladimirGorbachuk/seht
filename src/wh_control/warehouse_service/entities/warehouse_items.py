@@ -41,4 +41,5 @@ class WareHouse:
     item_quantities: list[ItemQuantity]
 
     def add_items(self, item_quantity: ItemQuantity):
+        # todo: extend this item adding functionality
         self.item_quantities

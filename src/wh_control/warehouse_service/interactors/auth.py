@@ -1,6 +1,8 @@
 import datetime
 from typing import Protocol
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from warehouse_service.application.auth import (
     PasswordHashAndSalt,
     PasswordHasher,
@@ -29,7 +31,7 @@ class UserCreateProtocol(Protocol):
 
 
 class UserAuthenticateProtocol(Protocol):
-    async def authenticate_or_deny_user(self, user_login_pwd: UserLoginPwd) -> bool:
+    async def authenticate_or_deny_user(self, user_login_pwd: UserLoginPwd) -> str:
         raise NotImplementedError
 
 
@@ -42,10 +44,11 @@ class UserAuthenticateBySessionProtocol(Protocol):
 
 class UserCreate(UserCreateProtocol):
     def __init__(
-        self, *, password_hasher: PasswordHasher, auth_user_repo: AuthUserRepo
+        self, *, password_hasher: PasswordHasher, auth_user_repo: AuthUserRepo, session: AsyncSession,
     ):
         self.password_hasher = password_hasher
         self.auth_user_repo = auth_user_repo
+        self.session = session
 
     async def create_user(self, user_login_pwd: UserLoginPwdUUID) -> None:
         password_salt_and_hash = self.password_hasher.hash_password(
@@ -57,6 +60,7 @@ class UserCreate(UserCreateProtocol):
             salt=password_salt_and_hash.salt,
             password_hash=password_salt_and_hash.password_hash,
         )
+        await self.session.commit()
 
 
 class UserAuthenticate(UserAuthenticateProtocol):
@@ -67,11 +71,13 @@ class UserAuthenticate(UserAuthenticateProtocol):
         auth_user_repo: AuthUserRepo,
         auth_token_controller: AuthTokenController,
         dt_now: datetime.datetime,
+        session: AsyncSession,
     ):
         self.password_hasher = password_hasher
         self.auth_user_repo = auth_user_repo
         self.auth_token_controller = auth_token_controller
         self.dt_now = dt_now
+        self.session = session
 
     async def authenticate_or_deny_user(self, user_login_pwd: UserLoginPwd) -> str:
         user_or_none = await self.auth_user_repo.get_by_login(
@@ -94,6 +100,7 @@ class UserAuthenticate(UserAuthenticateProtocol):
             dt_created=self.dt_now,
             user_uuid=user_or_none.uuid,
         )
+        await self.session.commit()
         return session_token
 
 
@@ -104,17 +111,21 @@ class UserAuthenticateBySession(UserAuthenticateBySessionProtocol):
         auth_user_repo: AuthUserRepo,
         dt_now: datetime.datetime,
         auth_token_controller: AuthTokenController,
+        session: AsyncSession,
     ):
         self.auth_user_repo = auth_user_repo
         self.auth_token_controller = auth_token_controller
         self.dt_now = dt_now
+        self.session = session
 
     async def authenticate_or_deny_user(
-        self, user_session_token: str
+        self, 
+        user_session_token: str,
     ) -> UserAuthSession:
         auth_session_or_none = await self.auth_user_repo.get_by_session_token(
             session_token=user_session_token
         )
+        await self.session.commit()
         if not auth_session_or_none:
             raise UserSessionNotFoundOrExpired("not found")
         if not self.auth_token_controller.check_expired(

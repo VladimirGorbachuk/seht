@@ -18,10 +18,10 @@ class UserAuth:
     password_hash: PasswordHash
 
     def create_related_session(
-        self, *, login_dt: datetime.datetime, session_key: str
+        self, *, login_dt: datetime.datetime, session_token: str
     ) -> "UserAuthSession":
         """use in successful auth scenario, e.g. if password matches"""
-        session = AuthSession(session_key=session_key, last_login=login_dt)
+        session = AuthSession(session_token=session_token, last_login=login_dt, user_uuid=self.uuid)
         return UserAuthSession(uuid=self.uuid, session=session)
 
 

@@ -19,8 +19,9 @@ dependencies = [
 ]
 
 [project.scripts]
-wh-service = "warehouse_service.api.main:init_app"
+wh-service = "warehouse_service.web_api.main:init_app"
 upgrade = "warehouse_service.infra.db.migrations.migrations:upgrade"
+create-default-user = "warehouse_service.project_setup:create_default_user"
 
 
 [project.optional-dependencies]

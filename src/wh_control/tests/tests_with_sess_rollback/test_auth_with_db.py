@@ -44,7 +44,6 @@ async def test_interactor_nonexisting_not_found(
 async def test_interactor_user_create(
     async_session_with_rollback: AsyncSession,
 ) -> None:
-    print("WHUTTTT?", async_session_with_rollback)
     user_create_interactor = user_create_initialize(
         sess=async_session_with_rollback, auth_crypto_settings=AuthCryptoSettings()
     )

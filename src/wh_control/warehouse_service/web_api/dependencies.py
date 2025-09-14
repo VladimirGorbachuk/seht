@@ -29,10 +29,11 @@ async def make_session(
     sessionmaker: AsyncSessionmakerProtocol = Depends(),
 ) -> AsyncGenerator[AsyncSession, None]:
     try:
-        session = sessionmaker.begin()
+        session = sessionmaker()
         yield session
-    except Exception:
+    except Exception as e:
         await session.rollback()
+        raise e
     finally:
         await session.close()
 
@@ -57,7 +58,7 @@ def provide_user_authenticate_by_session(
 
 def set_dependency_injection(app: FastAPI) -> None:
     """
-    should rewrite to Dishka
+    todo: should rewrite to Dishka
     """
     app.dependency_overrides.update(
         {

@@ -28,6 +28,7 @@ def user_authenticate_initialize(
     auth_token_controller = AuthTokenController(auth_crypto_settings)
     auth_repo = AuthUserRepo(sess)
     return UserAuthenticate(
+        session=sess,
         password_hasher=hasher,
         auth_user_repo=auth_repo,
         auth_token_controller=auth_token_controller,
@@ -44,6 +45,7 @@ def user_create_initialize(
     hasher = PasswordHasher(auth_crypto_settings)
     auth_repo = AuthUserRepo(sess)
     return UserCreate(
+        session=sess,
         password_hasher=hasher,
         auth_user_repo=auth_repo,
     )
@@ -61,6 +63,7 @@ def session_auth_initialize(
     auth_repo = AuthUserRepo(sess)
     auth_token_controller = AuthTokenController(auth_crypto_settings)
     return UserAuthenticateBySession(
+        session=sess,
         auth_user_repo=auth_repo,
         dt_now=dt_now,
         auth_token_controller=auth_token_controller,

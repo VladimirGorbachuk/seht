@@ -1,3 +1,7 @@
+x-default-user: &default-user-environment
+  DEFAULT_USER_LOGIN: ${DEFAULT_USER_LOGIN:-default_login}
+  DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD:-default_password}
+
 x-psql-environment: &psql-environment
   POSTGRES_USER: ${POSTGRES_USER:-postgres}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-warehouses}
@@ -16,29 +20,31 @@ services:
       dockerfile:
         ./ci_cd/api.Dockerfile
     environment:
-       <<: [*psql-environment, *rmq-environment]
+       <<: [*psql-environment, *rmq-environment, *default-user-environment]
     ports:
-      - 8080:8080
+      - 8000:8000
     depends_on:
       db:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      only-local-migrate:
+        condition: service_completed_successfully
     restart: on-failure
-    command: uvicorn warehouse_service.api.main:init_app
+    command: uvicorn warehouse_service.web_api.main:init_app --host 0.0.0.0 --port 8000
 
   only-local-migrate:
     build:
       dockerfile:
         ./ci_cd/api.Dockerfile
     environment:
-       <<: [*psql-environment, *rmq-environment]
+       <<: [*psql-environment, *rmq-environment, *default-user-environment]
     depends_on:
       db:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-    command: upgrade
+    command: upgrade && create-default-user
 
   db:
     image: postgres:17.5-bookworm

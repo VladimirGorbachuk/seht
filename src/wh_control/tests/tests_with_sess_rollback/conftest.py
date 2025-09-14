@@ -1,7 +1,7 @@
 import asyncio
 import os
 import sys
-from typing import AsyncGenerator, Generator
+from typing import Generator
 from urllib.parse import urlparse
 
 import alembic.config
@@ -19,7 +19,6 @@ from warehouse_service.infra.db.sessionmaker import (
     PostgresSessions,
 )
 from warehouse_service.infra.db.settings import PostgresSettings
-from warehouse_service.repository.auth_user import AuthUserRepo
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -97,4 +96,4 @@ def async_session_with_rollback(
         session = async_session()
         yield session
     finally:
-        session.rollback()
+        session.rollback()  # todo: should await
