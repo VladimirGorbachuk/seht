@@ -1,9 +1,13 @@
 from logging import getLogger
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 
-from .dependencies import ResponseCookieManagerProtocol, UserAuthenticateProtocol, UserCreateProtocol
+from .dependencies import (
+    ResponseCookieManagerProtocol,
+    UserAuthenticateProtocol,
+    UserCreateProtocol,
+)
 from .serializers import UserLoginPwdSerializer
 from warehouse_service.interactors.auth import (
     UserNotFound,
@@ -11,7 +15,10 @@ from warehouse_service.interactors.auth import (
     UserAuthenticateBySessionProtocol,
     UserSessionNotFoundOrExpired,
 )
-from warehouse_service.web_api.serializers import UserLoginPwdSerializer, UserLoginPwdUUIDSerializer
+from warehouse_service.web_api.serializers import (
+    UserLoginPwdSerializer,
+    UserLoginPwdUUIDSerializer,
+)
 
 
 logger = getLogger(__name__)

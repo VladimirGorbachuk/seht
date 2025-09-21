@@ -1,5 +1,3 @@
-
-
 from typing import Any
 
 
@@ -15,7 +13,6 @@ class LoginShouldContainNonNumericCharacters(ValueError):
     pass
 
 
-
 class PasswordTooShort(ValueError):
     pass
 
@@ -26,7 +23,6 @@ class PasswordTypeError(ValueError):
 
 class PasswordShouldContainNonNumericCharacters(ValueError):
     pass
-
 
 
 class PasswordShouldContainNonAlphabetCharacters(ValueError):
@@ -41,6 +37,7 @@ class Login:
     """
     use both as VO and as descriptor
     """
+
     def __init__(self, value: str | None = None):
         if value is not None:
             self._validate(value)
@@ -56,18 +53,20 @@ class Login:
         if len(value) < LOGIN_MIN_LENGTH:
             raise LoginTooShort(f"login should be at least {LOGIN_MIN_LENGTH} chars")
         if value.isnumeric():
-            raise LoginShouldContainNonNumericCharacters(f"login should contain not only numeric characters")
-            
+            raise LoginShouldContainNonNumericCharacters(
+                "login should contain not only numeric characters"
+            )
+
     def __set__(self, obj, value: "str | Login"):
         if isinstance(value, Login):
             setattr(obj, self.private_name, value._value)
             return
         self._validate(value)
         setattr(obj, self.private_name, value)
-        
+
     def __get__(self, instance, cls) -> str:
         return getattr(instance, self.private_name)
-    
+
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Login):
             return False
@@ -78,6 +77,7 @@ class Password:
     """
     use both as VO and as descriptor
     """
+
     def __init__(self, value: str | None = None):
         if value is not None:
             self._validate(value)
@@ -90,24 +90,29 @@ class Password:
     def _validate(self, value: str) -> None:
         if not isinstance(value, str):
             raise PasswordTypeError(f"expecting str, got {value}")
-        print(value, "WTF?!")
         if len(value) < PASSWORD_MIN_LENGTH:
-            raise PasswordTooShort(f"password should be at least {PASSWORD_MIN_LENGTH} chars")
+            raise PasswordTooShort(
+                f"password should be at least {PASSWORD_MIN_LENGTH} chars"
+            )
         if value.isnumeric():
-            raise PasswordShouldContainNonNumericCharacters("should contain non numeric chars")
+            raise PasswordShouldContainNonNumericCharacters(
+                "should contain non numeric chars"
+            )
         if value.isalpha():
-            raise PasswordShouldContainNonAlphabetCharacters("should contain nonalphabet chars also")
-            
+            raise PasswordShouldContainNonAlphabetCharacters(
+                "should contain nonalphabet chars also"
+            )
+
     def __set__(self, obj, value: "str | Login"):
         if isinstance(value, Login):
             setattr(obj, self.private_name, value._value)
             return
         self._validate(value)
         setattr(obj, self.private_name, value)
-        
+
     def __get__(self, instance, cls) -> str:
         return getattr(instance, self.private_name)
-    
+
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Login):
             return False

@@ -18,8 +18,6 @@ logger = getLogger(__name__)
 
 
 async def create_user():
-    print("CREATING default user")
-    print("WTF", os.environ.get("DEFAULT_USER_LOGIN"), os.environ.get("DEFAULT_USER_PASSWORD"))
     logger.info("starting to create default user")
     if os.environ.get("DEFAULT_USER_LOGIN") and os.environ.get("DEFAULT_USER_PASSWORD"):
         default_user = UserLoginPwdUUID(

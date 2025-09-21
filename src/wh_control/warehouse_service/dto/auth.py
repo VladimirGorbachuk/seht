@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from uuid import UUID
 
 from warehouse_service.entities.vo import Login, Password

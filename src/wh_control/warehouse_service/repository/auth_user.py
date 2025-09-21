@@ -23,7 +23,10 @@ class AuthUserRepo(AuthUserRepoProtocol):
     async def get_by_session_token(self, session_token: str) -> UserAuthSession | None:
         result = await self.session.execute(
             select(UserAuthSession)
-            .options(joinedload(UserAuthSession.session), joinedload(UserAuthSession.permissions))
+            .options(
+                joinedload(UserAuthSession.session),
+                joinedload(UserAuthSession.permissions),
+            )
             .join(AuthSession, UserAuthSession.session)
             .where(AuthSession.session_token == session_token)
         )
@@ -68,7 +71,9 @@ class AuthUserRepo(AuthUserRepoProtocol):
         return result.scalar()
 
     async def user_exists_by_login(
-        self, *, login: str,
+        self,
+        *,
+        login: str,
     ) -> bool:
         result = await self.session.execute(
             select(exists().where(UserAuth.login == login))

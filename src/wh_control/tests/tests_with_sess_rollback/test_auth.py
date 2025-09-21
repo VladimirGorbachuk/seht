@@ -2,9 +2,7 @@ from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from testcontainers.postgres import PostgresContainer
 
-from warehouse_service.infra.db.settings import PostgresSettings
 from warehouse_service.interactors.auth import (
     UserNotFound,
     UserSessionNotFoundOrExpired,

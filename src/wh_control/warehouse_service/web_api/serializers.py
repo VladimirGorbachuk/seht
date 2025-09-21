@@ -13,7 +13,6 @@ class UserLoginPwdSerializer(BaseModel):
         return UserLoginPwd(self.login, self.password)
 
 
-
 class UserLoginPwdUUIDSerializer(BaseModel):
     login: str
     password: str

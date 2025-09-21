@@ -18,7 +18,11 @@ from warehouse_service.factories.auth import (
     user_create_initialize,
     session_auth_initialize,
 )
-from warehouse_service.web_api.cookies import CookieSettings, ResponseCookieManager, ResponseCookieManagerProtocol
+from warehouse_service.web_api.cookies import (
+    CookieSettings,
+    ResponseCookieManager,
+    ResponseCookieManagerProtocol,
+)
 
 
 @functools.lru_cache(maxsize=1)

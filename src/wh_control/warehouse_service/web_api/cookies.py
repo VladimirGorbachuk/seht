@@ -12,10 +12,12 @@ class CookieSettings:
 
     @classmethod
     def initialize_from_environment(cls) -> "CookieSettings":
-        use_insecure_cookies = os.environ.get("COOKIES_INSECURE_ONLY_LOCAL", False) == "True"
+        use_insecure_cookies = (
+            os.environ.get("COOKIES_INSECURE_ONLY_LOCAL", False) == "True"
+        )
         return cls(
-            max_age = int(os.environ.get("COOKIES_MAX_AGE", 3600)),
-            secure = not use_insecure_cookies,
+            max_age=int(os.environ.get("COOKIES_MAX_AGE", 3600)),
+            secure=not use_insecure_cookies,
         )
 
 
@@ -39,5 +41,3 @@ class ResponseCookieManager:
             path="/",
         )
         return response
-
-

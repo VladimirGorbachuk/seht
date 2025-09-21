@@ -1,9 +1,17 @@
+from logging import getLogger
 import os
 
 from alembic import command
 from alembic.config import Config
 
 from warehouse_service.infra.db.settings import PostgresSettings
+from warehouse_service.configure_logging import configure_logger
+
+
+configure_logger()
+
+
+logger = getLogger(__name__)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +47,5 @@ def init_alembic_config(settings: PostgresSettings) -> Config:
 def upgrade(settings: PostgresSettings | None = None) -> None:
     if settings is None:
         settings = PostgresSettings.from_env()
-    print("GOING TO UPGRADE")
     command.upgrade(config=init_alembic_config(settings), revision="head")
-    print("UPGRADED")
+    logger.info("UPGRADED")
