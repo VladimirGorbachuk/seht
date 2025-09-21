@@ -2,6 +2,9 @@ x-default-user: &default-user-environment
   DEFAULT_USER_LOGIN: ${DEFAULT_USER_LOGIN:-default_login}
   DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD:-default_password}
 
+x-app-environment: &x-app-environment
+  COOKIES_INSECURE_ONLY_LOCAL: ${COOKIES_INSECURE_ONLY_LOCAL:-True}
+
 x-psql-environment: &psql-environment
   POSTGRES_USER: ${POSTGRES_USER:-postgres}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-warehouses}
@@ -20,7 +23,7 @@ services:
       dockerfile:
         ./ci_cd/api.Dockerfile
     environment:
-       <<: [*psql-environment, *rmq-environment, *default-user-environment]
+       <<: [*psql-environment, *rmq-environment, *default-user-environment, *x-app-environment]
     ports:
       - 8000:8000
     depends_on:
@@ -44,7 +47,7 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
-    command: upgrade && create-default-user
+    command: sh -c "upgrade && echo UPGRADED && create-default-user && echo CREATED"
 
   db:
     image: postgres:17.5-bookworm

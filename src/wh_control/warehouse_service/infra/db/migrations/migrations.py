@@ -39,4 +39,6 @@ def init_alembic_config(settings: PostgresSettings) -> Config:
 def upgrade(settings: PostgresSettings | None = None) -> None:
     if settings is None:
         settings = PostgresSettings.from_env()
+    print("GOING TO UPGRADE")
     command.upgrade(config=init_alembic_config(settings), revision="head")
+    print("UPGRADED")

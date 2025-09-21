@@ -1,5 +1,6 @@
 import datetime
-from typing import Protocol
+from typing import Protocol, Optional
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +11,55 @@ from warehouse_service.application.auth import (
 )
 from warehouse_service.entities.auth import UserAuthSession
 from warehouse_service.dto.auth import UserLoginPwd, UserLoginPwdUUID
-from warehouse_service.repository.auth_user import AuthUserRepo
+from warehouse_service.entities.auth import UserAuth, UserAuthSession, AuthSession
+
+
+class GetBySessionTokenRepoProtocol(Protocol):
+    async def get_by_session_token(self, session_token: str) -> Optional[UserAuthSession]:
+        pass
+
+
+class GetByLoginCreateSessionRepoProtocol(Protocol):
+    async def create_user_session(
+        self,
+        *,
+        session_token: str,
+        dt_created: datetime.datetime,
+        user_uuid: UUID,
+    ) -> None:
+        pass
+
+    async def get_by_login(self, login: str) -> Optional[UserAuth]:
+        pass
+
+
+class AddUserCheckExistsRepoProtocol(Protocol):
+    async def add_user(
+        self, 
+        *, 
+        uuid: UUID, 
+        login: str, 
+        password_hash: bytes, 
+        salt: bytes
+    ) -> UserAuth:
+        pass
+
+    async def user_exists_by_login(self, *, login: str) -> bool:
+        pass
+
+
+
+class AuthUserRepoProtocol(
+    GetByLoginCreateSessionRepoProtocol,
+    GetBySessionTokenRepoProtocol,
+    AddUserCheckExistsRepoProtocol,
+):
+    pass
+
+
+
+class UserAlreadyExists(Exception):
+    pass
 
 
 class UserNotFound(Exception):
@@ -47,7 +96,7 @@ class UserCreate(UserCreateProtocol):
         self,
         *,
         password_hasher: PasswordHasher,
-        auth_user_repo: AuthUserRepo,
+        auth_user_repo: AddUserCheckExistsRepoProtocol,
         session: AsyncSession,
     ):
         self.password_hasher = password_hasher
@@ -58,13 +107,16 @@ class UserCreate(UserCreateProtocol):
         password_salt_and_hash = self.password_hasher.hash_password(
             user_login_pwd.password
         )
-        await self.auth_user_repo.add_user(
-            uuid=user_login_pwd.uuid,
-            login=user_login_pwd.login,
-            salt=password_salt_and_hash.salt,
-            password_hash=password_salt_and_hash.password_hash,
-        )
-        await self.session.commit()
+        if not await self.auth_user_repo.user_exists_by_login(login=user_login_pwd.login):
+            await self.auth_user_repo.add_user(
+                uuid=user_login_pwd.uuid,
+                login=user_login_pwd.login,
+                salt=password_salt_and_hash.salt,
+                password_hash=password_salt_and_hash.password_hash,
+            )
+            await self.session.commit()
+        else:
+           raise UserAlreadyExists
 
 
 class UserAuthenticate(UserAuthenticateProtocol):
@@ -72,7 +124,7 @@ class UserAuthenticate(UserAuthenticateProtocol):
         self,
         *,
         password_hasher: PasswordHasher,
-        auth_user_repo: AuthUserRepo,
+        auth_user_repo: GetByLoginCreateSessionRepoProtocol,
         auth_token_controller: AuthTokenController,
         dt_now: datetime.datetime,
         session: AsyncSession,
@@ -87,6 +139,7 @@ class UserAuthenticate(UserAuthenticateProtocol):
         user_or_none = await self.auth_user_repo.get_by_login(
             login=user_login_pwd.login
         )
+        print(user_or_none, "WTFF???")
         if not user_or_none:
             raise UserNotFound
         verified = self.password_hasher.verify_password_hash(
@@ -96,6 +149,7 @@ class UserAuthenticate(UserAuthenticateProtocol):
             ),
             password=user_login_pwd.password,
         )
+        print("verified??/?", verified)
         if not verified:
             raise UserVerifyFailed
         session_token = self.auth_token_controller.make_hex_token()
@@ -105,6 +159,7 @@ class UserAuthenticate(UserAuthenticateProtocol):
             user_uuid=user_or_none.uuid,
         )
         await self.session.commit()
+        print("session token?", session_token)
         return session_token
 
 
@@ -112,7 +167,7 @@ class UserAuthenticateBySession(UserAuthenticateBySessionProtocol):
     def __init__(
         self,
         *,
-        auth_user_repo: AuthUserRepo,
+        auth_user_repo: GetBySessionTokenRepoProtocol,
         dt_now: datetime.datetime,
         auth_token_controller: AuthTokenController,
         session: AsyncSession,
@@ -137,3 +192,15 @@ class UserAuthenticateBySession(UserAuthenticateBySessionProtocol):
         ):
             raise UserSessionNotFoundOrExpired("expired")
         return auth_session_or_none
+
+
+
+class UserCreateInitiatedByUser(UserCreateProtocol):
+    def __init__(
+        self,
+        *,
+        password_hasher: PasswordHasher,
+        session: AsyncSession,
+    ):
+        self.password_hasher = password_hasher
+        self.session = session

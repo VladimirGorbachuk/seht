@@ -1,9 +1,9 @@
 from logging import getLogger
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
-from .dependencies import UserAuthenticateProtocol, UserCreateProtocol
+from .dependencies import ResponseCookieManagerProtocol, UserAuthenticateProtocol, UserCreateProtocol
 from .serializers import UserLoginPwdSerializer
 from warehouse_service.interactors.auth import (
     UserNotFound,
@@ -11,7 +11,7 @@ from warehouse_service.interactors.auth import (
     UserAuthenticateBySessionProtocol,
     UserSessionNotFoundOrExpired,
 )
-from warehouse_service.dto.auth import UserLoginPwdUUID
+from warehouse_service.web_api.serializers import UserLoginPwdSerializer, UserLoginPwdUUIDSerializer
 
 
 logger = getLogger(__name__)
@@ -21,13 +21,14 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/user", status_code=status.HTTP_201_CREATED)
 async def add_user(
-    user_data: UserLoginPwdUUID,
+    user_data: UserLoginPwdUUIDSerializer,
     user_create: UserCreateProtocol = Depends(),
     user_auth_by_session: UserAuthenticateBySessionProtocol = Depends(),
     sessionid: str | None = Cookie(None),
 ) -> JSONResponse:
     """Create a new user account (and should add check if permissions allow)"""
-    logger.info("got following sessionid %s", sessionid)
+    # todo: session should be shared between user create and user auth by session
+    user_data_dto = user_data.to_dto()
     if not sessionid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -42,7 +43,7 @@ async def add_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session expired",
         )
-    await user_create.create_user(user_data)
+    await user_create.create_user(user_data_dto)
     return JSONResponse(
         {"message": "user_created", "success": True},
         status_code=status.HTTP_201_CREATED,
@@ -53,8 +54,9 @@ async def add_user(
 async def login_user(
     credentials: UserLoginPwdSerializer,
     user_authenticate: UserAuthenticateProtocol = Depends(),
+    cookie_manager: ResponseCookieManagerProtocol = Depends(),
 ):
-    dto = credentials.to_dataclass()
+    dto = credentials.to_dto()
     try:
         session_token = await user_authenticate.authenticate_or_deny_user(
             dto,
@@ -63,15 +65,7 @@ async def login_user(
             content={"message": "Login successful", "success": True},
             status_code=status.HTTP_200_OK,
         )
-        response.set_cookie(
-            key="sessionid",
-            value=session_token,
-            httponly=True,
-            secure=True,
-            samesite="strict",
-            max_age=3600,
-            path="/",
-        )
+        response = cookie_manager.set_cookie(response, session_token)
         return response
     except UserNotFound:
         return JSONResponse(

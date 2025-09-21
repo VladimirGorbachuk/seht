@@ -7,7 +7,8 @@ from cryptography.exceptions import InvalidKey
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from warehouse_service.entities.auth import PasswordHash, Password, Salt
+from warehouse_service.entities.auth import PasswordHash, Salt
+from warehouse_service.entities.vo import Password
 
 
 @dataclass(frozen=True)
@@ -76,7 +77,7 @@ class PasswordHasher:
         salt = self._make_salt()
         kdf = self._make_kdf(salt)
         password_hash = kdf.derive(password.encode())
-        return PasswordHashAndSalt(password_hash=password_hash, salt=salt)
+        return PasswordHashAndSalt(password_hash=PasswordHash(password_hash), salt=salt)
 
     def verify_password_hash(
         self,

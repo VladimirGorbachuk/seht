@@ -5,7 +5,6 @@ from uuid import UUID
 import datetime
 
 
-Password = NewType("Password", str)
 Salt = NewType("Salt", bytes)
 PasswordHash = NewType("PasswordHash", bytes)
 
@@ -39,7 +38,6 @@ class GlobalPermissionEnum(StrEnum):
     company-level permissions equivalent of superuser role,
     better switch to more fine-grained permissions
     """
-
     CAN_ADD_USER = "can add other users"
     CAN_ADD_WAREHOUSE = "can add warehouse"
 

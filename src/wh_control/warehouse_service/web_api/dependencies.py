@@ -13,11 +13,12 @@ from warehouse_service.interactors.auth import (
     UserAuthenticateProtocol,
     UserCreateProtocol,
 )
-from warehouse_service.interactors.factories.auth import (
+from warehouse_service.factories.auth import (
     user_authenticate_initialize,
     user_create_initialize,
     session_auth_initialize,
 )
+from warehouse_service.web_api.cookies import CookieSettings, ResponseCookieManager, ResponseCookieManagerProtocol
 
 
 @functools.lru_cache(maxsize=1)
@@ -56,6 +57,11 @@ def provide_user_authenticate_by_session(
     return session_auth_initialize(sess=session)
 
 
+def provide_response_cookie_manager() -> ResponseCookieManager:
+    settings = CookieSettings.initialize_from_environment()
+    return ResponseCookieManager(settings)
+
+
 def set_dependency_injection(app: FastAPI) -> None:
     """
     todo: should rewrite to Dishka
@@ -67,5 +73,6 @@ def set_dependency_injection(app: FastAPI) -> None:
             UserCreateProtocol: provide_user_create,
             UserAuthenticateProtocol: provide_user_authenticate,
             UserAuthenticateBySessionProtocol: provide_user_authenticate_by_session,
+            ResponseCookieManagerProtocol: provide_response_cookie_manager,
         }
     )

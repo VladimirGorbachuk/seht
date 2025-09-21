@@ -1,15 +1,16 @@
 from uuid import UUID
 import datetime
 
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from warehouse_service.interactors.auth import AuthUserRepoProtocol
 from warehouse_service.entities.auth import UserAuth, UserAuthSession, AuthSession
 
 
-class AuthUserRepo:
+class AuthUserRepo(AuthUserRepoProtocol):
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -22,10 +23,11 @@ class AuthUserRepo:
     async def get_by_session_token(self, session_token: str) -> UserAuthSession | None:
         result = await self.session.execute(
             select(UserAuthSession)
-            .options(joinedload(UserAuthSession.session))
+            .options(joinedload(UserAuthSession.session), joinedload(UserAuthSession.permissions))
+            .join(AuthSession, UserAuthSession.session)
             .where(AuthSession.session_token == session_token)
         )
-        return result.scalar_one_or_none()
+        return result.unique().scalar_one_or_none()
 
     async def create_user_session(
         self,
@@ -53,7 +55,7 @@ class AuthUserRepo:
     async def add_user(
         self, *, uuid: UUID, login: str, password_hash: bytes, salt: bytes
     ) -> UserAuth:
-        return await self.session.execute(
+        result = await self.session.execute(
             insert(UserAuth)
             .values(
                 uuid=uuid,
@@ -63,3 +65,12 @@ class AuthUserRepo:
             )
             .returning(UserAuth),
         )
+        return result.scalar()
+
+    async def user_exists_by_login(
+        self, *, login: str,
+    ) -> bool:
+        result = await self.session.execute(
+            select(exists().where(UserAuth.login == login))
+        )
+        return bool(result.scalar())
